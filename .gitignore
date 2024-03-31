@@ -1,0 +1,4 @@
+backend/node_modules
+backend/pnpm-lock.json
+frontend/node_modules
+frontend/pnpm-lock.json
