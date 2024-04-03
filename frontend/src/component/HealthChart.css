@@ -1,0 +1,37 @@
+.custom-legend {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  
+  .custom-legend div {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+  }
+  
+  .legend-key {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+  }
+  
+  .chart {
+    width: 75%; /* or any other size */
+    height: 500px; /* or any other size */
+    margin: auto; /* Center the chart */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+ 
+  @media only screen and (max-width:700px) {
+    .chart {
+        width: 95%; /* or any other size */
+        height: auto; /* or any other size */
+        margin: auto; /* Center the chart */
+      }
+  }

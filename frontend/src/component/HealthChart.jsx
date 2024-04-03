@@ -1,82 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { TimeScale, TimeSeriesScale } from 'chart.js';
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  TimeScale,
-  TimeSeriesScale,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { format } from 'date-fns';
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './HealthChart.css';
 
 const HealthChart = () => {
+  // No change needed for useSelector if it's being used elsewhere in your component
   const responseData = useSelector((state) => state.form.responseData);
 
-  const data = {
-    labels: responseData.map((data) => new Date(data.timestamp).toLocaleTimeString()),
-    datasets: [
-      {
-        label: 'System Health',
-        data: responseData.map((data) => ({
-          x: new Date(data.timestamp).toLocaleTimeString(),
-          y: data.success ? 1 : 0
-        })),
-        borderColor: responseData.map((data) => data.success ? 'green' : 'red'),
-        backgroundColor: responseData.map((data) => data.success ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)'),
-        borderWidth: 1,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        spanGaps: true,
-        fill: true
-      }
-    ],
-  };
+  // Initialize data with an empty array
+  const [data, setData] = useState([]);
 
-  const options = {
-    responsive: true,
-    scales: {
-      x: {
-        type: 'time',
-        time: {
-          unit: 'minute'
-        },
-        title: {
-          display: true,
-          text: 'Time'
-        }
-      },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          callback: function (value) {
-            if (value === 1) return "Healthy";
-            if (value === 0) return "Unhealthy";
-            return value;
-          }
-        },
-        title: {
-          display: true,
-          text: 'Status'
-        }
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/get-latest-results');
+      const fetchedData = response.data;
+
+      // Access the 'results' array from the API response
+      if (fetchedData.success && Array.isArray(fetchedData.results)) {
+        localStorage.setItem('healthData', JSON.stringify(fetchedData.results));
+        setData(fetchedData.results);
+        toast.success('Data fetched and saved successfully');
+      } else {
+        throw new Error('Invalid data structure from API');
       }
-    },
-    plugins: {
-      legend: {
-        display: false
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to fetch data');
+      // Attempt to load from local storage if the API call fails
+      const storedData = localStorage.getItem('healthData');
+      if (storedData) {
+        setData(JSON.parse(storedData));
+        toast.info('Data loaded from local storage');
       }
     }
   };
 
-  return <Line data={data} options={options} />;
+  useEffect(() => {
+    fetchData();
+    const intervalId = setInterval(fetchData, 5000); // 4 minutes
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Define chartData using the updated 'data' state
+  const chartData = {
+    labels: data.map(item => format(new Date(item.timestamp), 'pp')),
+    datasets: [
+      {
+        label: 'Health Status',
+        data: data.map(item => item.success ? 5 : 0),
+        backgroundColor: data.map(item => item.success ? 'green' : 'red'),
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  return (
+    <div className='chart'>
+      <ToastContainer />
+      <div className="custom-legend">
+        <div><span className="legend-key" style={{background: 'green'}}></span> Up (Success)</div>
+        <div><span className="legend-key" style={{background: 'red'}}></span> Down (Failure)</div>
+      </div>
+      <Line data={chartData} options={options} />
+    </div>
+  );
 };
 
 export default HealthChart;
