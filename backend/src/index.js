@@ -112,7 +112,7 @@ app.post("/process-data", async (req, res) => {
           // Respond immediately to indicate the process has started
           res.json({ message: "Periodic processing started." });
 
-          processingIntervalId = setInterval(async () => {
+          // processingIntervalId = setInterval(async () => {
               try {
                   // Since validation passed earlier, we proceed with assuming data is valid here
                   let extractedData = await mainOperation(validatedData.site, 1);
@@ -181,7 +181,7 @@ app.post("/process-data", async (req, res) => {
                   // Log the error, but since we can't send an HTTP response here, consider other ways to notify about the error
                   console.error("Error during periodic processing:", error);
               }
-          }, 2 * 60 * 1000); // Interval set to 1 minute for demonstration
+          // }, 2 * 60 * 1000); // Interval set to 1 minute for demonstration
       } else {
           // If an interval is already running, inform the requester
           res.json({ message: "Processing is already running." });

@@ -43,7 +43,7 @@ async function extractElementAndCleanup(page, selector, filePath) {
   }, selector);
   
   if (elementHTML) {
-    logger.info(`Extracted element HTML: ${elementHTML}`);
+    logger.info(`Element has been extracted`);
     await fs.unlink(filePath);
     logger.info("Temporary file deleted.");
     return elementHTML;
@@ -53,7 +53,7 @@ async function extractElementAndCleanup(page, selector, filePath) {
 }
 
 async function mainOperation(site="superbahis.com",attempt = 1) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({headless:false});
   try {
     const page = await setupPage(browser);
     logger.info("Browser setup complete.");

@@ -1,13 +1,35 @@
 [
   {
+    "success": false,
+    "message": "'data-amp' is different from the extracted data.",
+    "extractedData": {
+      "data-amp": "https://m9.superbahis.com/amp.html",
+      "data-amp-cur": "https://www.superbahis.com",
+      "data-amp-title": "m9.superbahis.com",
+      "href": "https://m9.superbahis.com/amp.html"
+    },
+    "timestamp": "2024-04-06T07:31:09.008Z"
+  },
+  {
     "success": true,
     "message": "All attributes are equal to the extracted data.",
     "extractedData": {
-      "data-amp": "https://m8.superbahis.com/amp.html",
+      "data-amp": "https://m9.superbahis.com/amp.html",
       "data-amp-cur": "https://www.superbahis.com",
-      "data-amp-title": "m8.superbahis.com",
-      "href": "https://m8.superbahis.com/amp.html"
+      "data-amp-title": "m9.superbahis.com",
+      "href": "https://m9.superbahis.com/amp.html"
     },
-    "timestamp": "2024-04-03T08:42:05.296Z"
+    "timestamp": "2024-04-06T07:32:59.066Z"
+  },
+  {
+    "success": true,
+    "message": "All attributes are equal to the extracted data.",
+    "extractedData": {
+      "data-amp": "https://m9.superbahis.com/amp.html",
+      "data-amp-cur": "https://www.superbahis.com",
+      "data-amp-title": "m9.superbahis.com",
+      "href": "https://m9.superbahis.com/amp.html"
+    },
+    "timestamp": "2024-04-06T07:33:36.922Z"
   }
 ]
