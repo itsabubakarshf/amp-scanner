@@ -1,125 +1,109 @@
 import React from "react";
 import "./FormComponent.css";
-import { useDispatch } from "react-redux";
-import { setFormData, setResponseData } from "../store/formSlice";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { toast } from "react-toastify";
 
-// Define your form validation schema
-const FormSchema = Yup.object().shape({
-  site: Yup.string().required("Site is required"),
-  "data-amp": Yup.string()
-    .url("Must be a valid URL")
-    .required("Data AMP is required"),
-  "data-amp-cur": Yup.string()
-    .url("Must be a valid URL")
-    .required("Data AMP Current is required"),
-  "data-amp-title": Yup.string().required("Data AMP Title is required"),
-  href: Yup.string().url("Must be a valid URL").required("Href is required"),
-});
+const FormComponent = ({ worker, onSubmit, onCancel }) => {
+  const initialValues = {
+    siteName: worker ? worker.siteName : "",
+    dataAmpUrl: worker ? worker.dataAmpUrl : "",
+    dataAmpCurrent: worker ? worker.dataAmpCurrent : "",
+    dataAmpTitle: worker ? worker.dataAmpTitle : "",
+    href: worker ? worker.href : "",
+    interval: worker ? worker.interval : "",
+  };
 
-const FormComponent = () => {
-  const dispatch = useDispatch();
+  const FormSchema = Yup.object().shape({
+    siteName: Yup.string().required("Site name is required"),
+    dataAmpUrl: Yup.string()
+      .url("Must be a valid URL")
+      .required("Data AMP URL is required"),
+    dataAmpCurrent: Yup.string()
+      .url("Must be a valid URL")
+      .required("Data AMP Current URL is required"),
+    dataAmpTitle: Yup.string().required("Data AMP Title is required"),
+    href: Yup.string().url("Must be a valid URL").required("Href is required"),
+    interval: Yup.string()
+    .required("Interval is required")
+    .test(
+      'is-valid-interval', 
+      'Interval must be at least 10 seconds', 
+      value => {
+        const intervalInSeconds = parseInt(value, 10);
+        return !isNaN(intervalInSeconds) && intervalInSeconds >= 10; 
+      }
+    )
+  });
 
   return (
     <div className="form-container">
       <Formik
-        initialValues={{
-          site: "",
-          "data-amp": "",
-          "data-amp-cur": "",
-          "data-amp-title": "",
-          href: "",
-        }}
+        initialValues={initialValues}
         validationSchema={FormSchema}
-        onSubmit={(values, { setSubmitting }) => {
-          // Dispatch the action to save form data to the Redux store
-          dispatch(setFormData(values));
-          console.log("Submitting the following values:", values);
-          toast.success("Form has been submitted! Please wait 20-30s");
-          // Here's where you'll make the POST request
-          fetch("http://localhost:3000/process-data", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(values),
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error("Network response was not ok");
-              }
-              return response.json();
-            })
-            .then((data) => {
-              // Handle success
-              console.log("Success response:", data);
-              dispatch(setResponseData(data));
-              toast.success("Data has been scrapped successfully!");
-            })
-            .catch((error) => {
-              console.error("Fetch error:", error);
-              toast.error("An error occurred!");
-            })
-            .finally(() => {
-              setSubmitting(false); // Finish submitting state
-            });
+        onSubmit={(values, { setSubmitting, resetForm }) => {
+          onSubmit(values, worker ? worker._id : null);
+          setSubmitting(false);
+          resetForm();
         }}
+        enableReinitialize
       >
-        {() => (
+        {({ isSubmitting }) => (
           <Form>
             <div className="form-field">
-              <label htmlFor="site" className="label">
+              <label htmlFor="siteName" className="label">
                 Site
               </label>
               <Field
-                name="site"
+                name="siteName"
                 className="input"
                 placeholder="Enter site name"
               />
-              <ErrorMessage name="site" component="div" className="error" />
+              <ErrorMessage name="siteName" component="div" className="error" />
             </div>
 
             <div className="form-field">
-              <label htmlFor="data-amp" className="label">
+              <label htmlFor="dataAmpUrl" className="label">
                 Data AMP URL
               </label>
               <Field
-                name="data-amp"
+                name="dataAmpUrl"
                 className="input"
                 placeholder="Enter Data AMP URL"
               />
-              <ErrorMessage name="data-amp" component="div" className="error" />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="data-amp-cur" className="label">
-                Data AMP Current
-              </label>
-              <Field
-                name="data-amp-cur"
-                className="input"
-                placeholder="Enter Data AMP Current URL"
-              />
               <ErrorMessage
-                name="data-amp-cur"
+                name="dataAmpUrl"
                 component="div"
                 className="error"
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="data-amp-title" className="label">
+              <label htmlFor="dataAmpCurrent" className="label">
+                Data AMP Current
+              </label>
+              <Field
+                name="dataAmpCurrent"
+                className="input"
+                placeholder="Enter Data AMP Current URL"
+              />
+              <ErrorMessage
+                name="dataAmpCurrent"
+                component="div"
+                className="error"
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="dataAmpTitle" className="label">
                 Data AMP Title
               </label>
               <Field
-                name="data-amp-title"
+                name="dataAmpTitle"
                 className="input"
                 placeholder="Enter Data AMP Title"
               />
               <ErrorMessage
-                name="data-amp-title"
+                name="dataAmpTitle"
                 component="div"
                 className="error"
               />
@@ -137,8 +121,32 @@ const FormComponent = () => {
               <ErrorMessage name="href" component="div" className="error" />
             </div>
 
-            <button type="submit" className="submit-button">
-              Submit
+            <div className="form-field">
+              <label htmlFor="interval" className="label">
+                Interval in Seconds
+              </label>
+              <Field
+                name="interval"
+                className="input"
+                placeholder="Enter Interval in Seconds"
+              />
+              <ErrorMessage name="interval" component="div" className="error" />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary mr-2  submit-button"
+              disabled={isSubmitting}
+            >
+              {worker ? "Update" : "Submit"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
             </button>
           </Form>
         )}
