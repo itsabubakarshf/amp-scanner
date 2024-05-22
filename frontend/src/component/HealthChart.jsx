@@ -17,7 +17,7 @@ const HealthChart = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/get-latest-results');
+      const response = await axios.get('http://localhost:3005/api/get-latest-results');
       const fetchedData = response.data;
 
       // Access the 'results' array from the API response
@@ -42,8 +42,8 @@ const HealthChart = () => {
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 5000); // 4 minutes
-    return () => clearInterval(intervalId);
+    // const intervalId = setInterval(fetchData, 5000); // 4 minutes
+    // return () => clearInterval(intervalId);
   }, []);
 
   // Define chartData using the updated 'data' state
