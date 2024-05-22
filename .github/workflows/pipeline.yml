@@ -4,25 +4,22 @@ on:
   push:
     branches: [ "AMP-01" ]
   pull_request:
-    branches: [ "AMP-01"]
+    branches: [ "AMP-01" ]
 
 jobs:
- 
-
-  build_and_deploy_main:
+  build_and_deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/AMP-01'
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Pull and build App for PROD
-      uses: appleboy/ssh-action@master
-      with:
-        script: |
-          set -e
-          cd /var/www/amp-scanner/frontend/
-          sh script.sh
-        host: 31.210.50.186
-        username: root
-        password: 12A6WFC73EA637xGq93*k- 
+      - name: Pull and build App for PROD
+        uses: appleboy/ssh-action@master
+        with:
+          script: |
+            set -e
+            cd /var/www/amp-scanner/frontend/
+            sh script.sh
+          host: 31.210.50.186
+          username: root
+          password: 12A6WFC73EA637xGq93*k- 
