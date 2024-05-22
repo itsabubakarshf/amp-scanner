@@ -2,20 +2,39 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "AMP-01" ]
+    branches: [ "develop", "AMP-01" ]
   pull_request:
-    branches: [ "AMP-01" ]
+    branches: [ "develop", "AMP-01" ]
 
 jobs:
-  build_and_deploy:
+  build_and_deploy_develop:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Pull and build App for PROD
-        uses: appleboy/ssh-action@master
-        with:
+    - name: Pull and build App for DEV
+      uses: appleboy/ssh-action@master
+      with:
+        script: |
+          set -e
+          cd /var/www/genie-app-dev/frontend
+          sh script.sh
+        host: 137.184.166.204  
+        username: root
+        password: x56,3H!f&@a
+
+  build_and_deploy_AMP-01:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/AMP-01'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Pull and build App for PROD
+      uses: appleboy/ssh-action@master
+      with:
           script: |
             set -e
             cd /var/www/amp-scanner/frontend/
