@@ -27,7 +27,7 @@ jobs:
 
   build_and_deploy_AMP-01:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/AMP-01'
+    if: github.ref == 'refs/heads/amp-01'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
