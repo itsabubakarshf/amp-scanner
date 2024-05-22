@@ -25,4 +25,4 @@ jobs:
           sh script.sh
         host: 31.210.50.186
         username: root
-        password: 12A6WFC73EA637xGq93*k-
+        password: 12A6WFC73EA637xGq93*k- 
