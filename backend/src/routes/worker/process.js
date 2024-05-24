@@ -39,10 +39,11 @@ app.post("/update-process/:id", auth, async (req, res) => {
       await Worker.findByIdAndUpdate(workerId, { isRunning: false });
       res.status(200).json({ status: true, message: "Processing stopped for worker " + workerId });
     } else {
+      const interval = parseInt(worker.interval, 10);
       startWorkerProcess(workerId, async () => {
         logger.info(`Processing data for worker ${workerId}`);
         await processData(worker, req.user._id);
-      }, worker.interval);
+      }, interval);
 
       await Worker.findByIdAndUpdate(workerId, { isRunning: true });
       res.status(200).json({ status: true, message: "Processing started for worker " + workerId });
@@ -56,7 +57,7 @@ app.post("/update-process/:id", auth, async (req, res) => {
 async function processData(worker, userId) {
   try {
     // Use mainOperation to simulate fetching data
-    let extractedData = await mainOperation(worker.siteName, 1);
+    let extractedData = await mainOperation(worker.dataAmpUrl,worker._id, 1);
 
     // Process and compare the data as in your original endpoint logic
     const dom = new JSDOM(extractedData);
@@ -88,7 +89,7 @@ async function processData(worker, userId) {
   } catch (error) {
     logger.error("Error during operation for worker " + worker._id + ": ", error);
   }
-}
+} 
 function prepareResult(worker, extractedData) {
   let result = {
     success: true,
@@ -125,4 +126,22 @@ function prepareResult(worker, extractedData) {
 
   return result;
 }
+
+const initializeRunningWorkers = async () => {
+  try {
+    const runningWorkers = await Worker.find({ isRunning: true });
+    runningWorkers.forEach(worker => {
+      const interval = parseInt(worker.interval, 10);
+      startWorkerProcess(worker._id, async () => {
+        logger.info(`Processing data for worker ${worker._id}`);
+        await processData(worker, worker.user);
+      }, interval);
+    });
+  } catch (error) {
+    logger.error("Error initializing running workers:", error);
+  }
+};
+
+
+initializeRunningWorkers()
 module.exports = app

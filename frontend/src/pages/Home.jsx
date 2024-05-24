@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import FormComponent from "../component/FormComponent";
-import HealthChart from "../component/HealthChart";
 import CardComponent from "../component/CardComponent";
-import {
-  getFromServer,
-  postToServer,
-  putToServer,
-} from "../helpers/request";
+import { getFromServer, postToServer, putToServer } from "../helpers/request";
 import { toast } from "react-toastify";
+import CardDetail from "./CardDetail";
+import { FaPlus, FaSignOutAlt, FaSearch } from 'react-icons/fa';
+import './Home.css'; 
 
 const Home = () => {
   const [showForm, setShowForm] = useState(false);
@@ -15,6 +13,7 @@ const Home = () => {
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState(null);
 
   useEffect(() => {
     fetchWorkers();
@@ -48,6 +47,7 @@ const Home = () => {
       toast.error("Failed to add worker: " + response.message);
     }
   };
+
   const handleWorkerSubmit = async (workerData, id) => {
     let response;
     if (id) {
@@ -94,27 +94,38 @@ const Home = () => {
     setCurrentWorker(null);
   };
 
+  const handleCardClick = (worker) => {
+    setSelectedWorker(worker);
+  };
+
+  const handleBack = () => {
+    setSelectedWorker(null);
+  };
+
   return (
     <>
-      <div className="container mt-5">
+      <div className="container mt-5 home-container">
         <div className="row align-items-center">
           <div className="col-md-4"></div>
           <div className="col-md-4 d-flex justify-content-center">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search by site name or URL..."
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ height: "40px" }}
-            />
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search by site name or URL..."
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ height: "40px" }}
+              />
+            </div>
           </div>
           <div className="col-md-1 d-flex justify-content-start pl-2">
             <button
               className="btn btn-success"
               onClick={() => setShowForm(true)}
               style={{ height: "40px" }}
+              title="Add Worker"
             >
-              Add
+              <FaPlus />
             </button>
           </div>
           <div className="col-md-2"></div>
@@ -123,23 +134,28 @@ const Home = () => {
               className="btn btn-danger"
               onClick={handleLogout}
               style={{ height: "40px" }}
+              title="Logout"
             >
-              Logout
+              <FaSignOutAlt />
             </button>
           </div>
         </div>
         {showForm ? (
           <FormComponent worker={currentWorker} onSubmit={handleWorkerSubmit} onCancel={handleCloseForm} />
+        ) : selectedWorker ? (
+          <CardDetail worker={selectedWorker} onBack={handleBack} />
         ) : (
-          <div className="card-container mt-5">
+          <div className="row mt-5">
             {filteredWorkers.length > 0 ? (
               filteredWorkers.map((worker) => (
-                <CardComponent
-                  key={worker._id}
-                  worker={worker}
-                  onEdit={handleEdit}
-                  fetchWorkers={fetchWorkers}
-                />
+                <div key={worker._id} className="col-md-3 mb-4">
+                  <CardComponent
+                    worker={worker}
+                    onEdit={handleEdit}
+                    fetchWorkers={fetchWorkers}
+                    onClick={() => handleCardClick(worker)}
+                  />
+                </div>
               ))
             ) : (
               <div className="text-center">

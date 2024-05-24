@@ -1,0 +1,16 @@
+
+  
+  .input-group {
+    width: 100%;
+  }
+  
+  .input-group-text {
+    background-color: #e9ecef;
+    border: none;
+  }
+  
+  .form-control {
+    border: none;
+    box-shadow: none;
+  }
+  
