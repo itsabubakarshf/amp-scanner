@@ -1,6 +1,16 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
-
+const path = require('path');
+const { JSDOM } = require('jsdom');
+const logger = require('../utils/logger')
+const ensureDirectoryExists = async (dirPath) => {
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+    logger.info(`Directory ${dirPath} ensured to exist.`);
+  } catch (error) {
+    logger.error(`Error ensuring directory ${dirPath}: ${error.message}`);
+  }
+}
 // Helper Functions
 function generateDelay(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -10,10 +20,6 @@ function formatDateToPKT(date) {
   const pktDate = new Date(date.getTime() + offset);
   return pktDate.toISOString().replace('T', ' ').replace('Z', '') + ' PKT'; // Simplified PKT format
 }
-const logger = {
-  info: (msg) => console.log(`[${formatDateToPKT(new Date())}] INFO: ${msg}`),
-  error: (msg) => console.error(`[${formatDateToPKT(new Date())}] ERROR: ${msg}`),
-};
 async function setupPage(browser) {
   const page = await browser.newPage();
   await page.setUserAgent("Mozilla/5.0 (Linux; Android 10; Samsung Galaxy S20 Ultra) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
@@ -45,8 +51,12 @@ async function extractElementAndCleanup(page, selector, filePath) {
     throw new Error("Element not found.");
   }
 }
-async function mainOperation(site="superbahis.com",attempt = 1) {
-  const browser = await puppeteer.launch({headless:true});
+async function mainOperation(site="superbahis.com",workerId,attempt = 1) {
+  const dirPath = path.join(__dirname, 'htmlContent');
+  await ensureDirectoryExists(dirPath);
+
+  const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
+  const browser = await puppeteer.launch({headless:"new"});
   try {
     const page = await setupPage(browser);
     logger.info("Browser setup complete.");
@@ -57,24 +67,33 @@ async function mainOperation(site="superbahis.com",attempt = 1) {
     await page.waitForNavigation({ waitUntil: "networkidle0" });
     logger.info("Page navigation finished.");
 
-    const filePath = "./loaded_content.html";
     await extractAndSaveContent(page, filePath);
     logger.info("Content saved.");
     await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
-    let extractedElement=await extractElementAndCleanup(page, "a[data-amp]", filePath);
+    let extractedElement = await extractElementAndCleanup(page, "a[data-amp]", filePath);
     return extractedElement;
   } catch (error) {
     logger.error(`Attempt ${attempt}: ${error.message}`);
     if (attempt < 3) {
+      await browser.close();
       logger.info(`Retrying... Attempt ${attempt + 1}`);
       await new Promise((resolve) => setTimeout(resolve, generateDelay(20000, 30000)));
-      await mainOperation(attempt + 1);
+      await mainOperation(site,workerId,attempt + 1);
     } else {
       logger.error("Max retries reached. Exiting...");
     }
   } finally {
     await browser.close();
     logger.info("Browser closed.");
+  }
+}
+
+async function cleanupFile(filePath) {
+  try {
+    await fs.unlink(filePath);
+    logger.info(`File ${filePath} deleted successfully.`);
+  } catch (error) {
+    logger.error(`Error deleting file ${filePath}: ${error.message}`);
   }
 }
 
