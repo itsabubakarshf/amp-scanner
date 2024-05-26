@@ -34,3 +34,33 @@
     margin: auto;
   }
 }
+
+.chartjs-tooltip {
+  background: #333;
+  border-radius: 10px;
+  color: white;
+  opacity: 0.9;
+  padding: 10px;
+  pointer-events: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  transform: translate(-50%, 0); 
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tooltip-text {
+  margin-bottom: 10px;
+}
+
+.tooltip-image img {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
