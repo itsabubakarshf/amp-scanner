@@ -10,7 +10,7 @@ const CardDetail = ({ worker, onBack }) => {
         <FaArrowLeft />
       </button>
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-5">
           <h5 className="section-title">Worker Details</h5>
           <p><strong>Site Name:</strong> {worker.siteName}</p>
           <p><strong>Data AMP URL:</strong> {worker.dataAmpUrl}</p>
@@ -19,7 +19,7 @@ const CardDetail = ({ worker, onBack }) => {
           <p><strong>Href:</strong> {worker.href}</p>
           <p><strong>Duration:</strong> {worker.interval} s</p>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-7">
           <HealthChart workerId={worker._id} />
         </div>
       </div>

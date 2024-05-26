@@ -1,7 +1,8 @@
-const logger = require('../utils/logger')
-const Worker = require('../models/worker/worker')
+const logger = require('../utils/logger');
+const Worker = require('../models/worker/worker');
 const activeWorkerIntervals = new Map();
 const runningWorkers = new Set();
+const stoppedWorkers = new Set();
 
 const startWorkerProcess = (workerId, processFunction, intervalInSeconds) => {
     const interval = parseInt(intervalInSeconds, 10);
@@ -12,6 +13,12 @@ const startWorkerProcess = (workerId, processFunction, intervalInSeconds) => {
     }
 
     const processAndScheduleNext = async () => {
+        if (stoppedWorkers.has(workerId)) {
+            logger.info(`Worker ${workerId} has been stopped. Not scheduling next run.`);
+            activeWorkerIntervals.delete(workerId);
+            return;
+        }
+
         if (runningWorkers.has(workerId)) {
             logger.info(`Worker ${workerId} is already running. Waiting for it to complete.`);
             return;
@@ -35,12 +42,15 @@ const startWorkerProcess = (workerId, processFunction, intervalInSeconds) => {
             logger.error(`Error processing worker ${workerId}: ${error.message}`);
         } finally {
             runningWorkers.delete(workerId);
-            // Schedule the next run
-            const timeoutId = setTimeout(processAndScheduleNext, interval * 1000);
-            activeWorkerIntervals.set(workerId, timeoutId);
+            // Schedule the next run only if the worker is not stopped
+            if (!stoppedWorkers.has(workerId)) {
+                const timeoutId = setTimeout(processAndScheduleNext, interval * 1000);
+                activeWorkerIntervals.set(workerId, timeoutId);
+            } else {
+                activeWorkerIntervals.delete(workerId);
+            }
         }
     };
-
 
     // Start the initial process
     const timeoutId = setTimeout(processAndScheduleNext, interval * 1000);
@@ -48,34 +58,15 @@ const startWorkerProcess = (workerId, processFunction, intervalInSeconds) => {
 };
 
 const stopWorkerProcess = (workerId) => {
+    stoppedWorkers.add(workerId);
     const timeoutId = activeWorkerIntervals.get(workerId);
     if (timeoutId) {
         clearTimeout(timeoutId);
         activeWorkerIntervals.delete(workerId);
-        console.log(`Stopped worker process for worker ${workerId}.`);
+        logger.info(`Stopped worker process for worker ${workerId}.`);
     } else {
-        console.log(`No active process found for worker ${workerId}.`);
+        logger.info(`No active process found for worker ${workerId}.`);
     }
 };
 
-// const processQueue = async () => {
-//     if (workerQueue.length === 0) return;
-
-//     const { workerId, processFunction, interval } = workerQueue.shift();
-
-//     const processAndScheduleNext = async () => {
-//         logger.info(`Started worker process for worker ${workerId}.`);
-//         await processFunction();
-//         logger.info(`Completed worker process for worker ${workerId}.`);
-//     };
-
-//     const intervalId = setInterval(async () => {
-//         await processAndScheduleNext();
-//     }, interval * 1000);
-
-//     activeWorkerIntervals.set(workerId, intervalId);
-// };
-
-
-
-module.exports = {startWorkerProcess,stopWorkerProcess}
+module.exports = { startWorkerProcess, stopWorkerProcess, stoppedWorkers };

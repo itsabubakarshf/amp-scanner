@@ -17,6 +17,10 @@ const ProcessedResultSchema = new mongoose.Schema({
         "data-amp-title": String,
         href: String
     },
+    ss: {
+        type:String,
+        defualt:'https://via.placeholder.com/150'
+    },
     timestamp: {
         type: Date,
         default: Date.now

@@ -7,7 +7,7 @@ const logger = require('../../utils/logger')
 const { JSDOM } = require("jsdom");
 const mainOperation = require("../../controller/puppeteer");
 const { z } = require("zod");
-const { startWorkerProcess, stopWorkerProcess } = require('../../services/workerProcess')
+const { startWorkerProcess, stopWorkerProcess, stoppedWorkers } = require('../../services/workerProcess')
 
 
 app.get("/get-latest-results/:workerId", auth, async (req, res) => {
@@ -29,35 +29,39 @@ app.get("/get-latest-results/:workerId", auth, async (req, res) => {
 app.post("/update-process/:id", auth, async (req, res) => {
   const workerId = req.params.id;
   try {
-    const worker = await Worker.findById(workerId);
-    if (!worker) {
-      return res.status(404).send("Worker not found.");
-    }
+      const worker = await Worker.findById(workerId);
+      if (!worker) {
+          return res.status(404).send("Worker not found.");
+      }
 
-    if (worker.isRunning) {
-      stopWorkerProcess(workerId);
-      await Worker.findByIdAndUpdate(workerId, { isRunning: false });
-      res.status(200).json({ status: true, message: "Processing stopped for worker " + workerId });
-    } else {
-      const interval = parseInt(worker.interval, 10);
-      startWorkerProcess(workerId, async () => {
-        logger.info(`Processing data for worker ${workerId}`);
-        await processData(worker, req.user._id);
-      }, interval);
+      if (worker.isRunning) {
+        logger.info(`Worker ${workerId} Stopped for user ${req.user.email}`)
+          stopWorkerProcess(workerId);
+          await Worker.findByIdAndUpdate(workerId, { isRunning: false });
+          res.status(200).json({ status: true, message: "Processing stopped for worker " + workerId });
+      } else {
+          logger.info(`Worker ${workerId} started for user ${req.user.email}`)
 
-      await Worker.findByIdAndUpdate(workerId, { isRunning: true });
-      res.status(200).json({ status: true, message: "Processing started for worker " + workerId });
-    }
+          stoppedWorkers.delete(workerId);
+          const interval = parseInt(worker.interval, 10);
+          startWorkerProcess(workerId, async () => {
+              logger.info(`Processing data for worker ${workerId}`);
+              await processData(worker, req.user._id);
+          }, interval);
+
+          await Worker.findByIdAndUpdate(workerId, { isRunning: true });
+          res.status(200).json({ status: true, message: "Processing started for worker " + workerId });
+      }
   } catch (error) {
-    logger.error("Error in processing worker:", error);
-    res.status(500).json({ status: false, message: `${error.message}` });
+      logger.error("Error in processing worker:", error);
+      res.status(500).json({ status: false, message: `${error.message}` });
   }
 });
 
 async function processData(worker, userId) {
   try {
     // Use mainOperation to simulate fetching data
-    let extractedData = await mainOperation(worker.dataAmpUrl,worker._id, 1);
+    let extractedData = await mainOperation(worker.siteName,worker._id, 1);
 
     // Process and compare the data as in your original endpoint logic
     const dom = new JSDOM(extractedData);
