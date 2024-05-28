@@ -6,7 +6,7 @@ import './CardDetail.css'; // Import the CSS file for styling
 const CardDetail = ({ worker, onBack }) => {
   return (
     <div className="container mt-5">
-      <button className="btn btn-primary" onClick={onBack} title="Go Back">
+      <button className="btn btn-primary mb-5" onClick={onBack} title="Go Back">
         <FaArrowLeft />
       </button>
       <div className="row">

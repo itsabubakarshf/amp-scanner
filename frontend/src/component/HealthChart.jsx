@@ -66,11 +66,19 @@ const HealthChart = ({ workerId }) => {
     const time = format(new Date(item.timestamp), 'hh:mm:ss a');
     const message = item.message || '';
     const imageUrl = item.ss || 'https://via.placeholder.com/150';
+    const dataAmp = item.data ? item.data['data-amp'] : '';
+    const dataAmpCur = item.data ? item.data['data-amp-cur'] : '';
+    const dataAmpTitle = item.data ? item.data['data-amp-title'] : '';
+    const href = item.data ? item.data.href : '';
   
     const innerHtml = `
-    <div class="tooltip-content bg-secondary text-white rounded p-2">
+      <div class="tooltip-content bg-secondary text-white rounded p-2">
         <div class="tooltip-text">${date} ${time}</div>
         <div class="tooltip-text">${message}</div>
+        <div class="tooltip-text">Data AMP: ${dataAmp}</div>
+        <div class="tooltip-text">Data AMP Current: ${dataAmpCur}</div>
+        <div class="tooltip-text">Data AMP Title: ${dataAmpTitle}</div>
+        <div class="tooltip-text">Href: ${href}</div>
         <div class="tooltip-image"><img src="${imageUrl}" alt="Image" /></div>
       </div>
     `;
@@ -85,6 +93,7 @@ const HealthChart = ({ workerId }) => {
     tooltip.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
     tooltip.style.pointerEvents = 'none';
   };
+  
   
 
   const chartData = {
@@ -111,7 +120,7 @@ const HealthChart = ({ workerId }) => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 1,
+        max: 1.05, 
         ticks: {
           stepSize: 1,
           callback: function(value) {
