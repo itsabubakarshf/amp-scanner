@@ -35,33 +35,33 @@ app.post("/update-process/:id", auth, async (req, res) => {
       }
 
       if (worker.isRunning) {
-        logger.info(`Worker ${workerId} Stopped for user ${req.user.email}`)
-          stopWorkerProcess(workerId);
-          await Worker.findByIdAndUpdate(workerId, { isRunning: false });
-          res.status(200).json({ status: true, message: "Processing stopped for worker " + workerId });
+        logger.info(`Worker ${workerId} stopped for user ${req.user.email}`);
+        stopWorkerProcess(workerId);
+        await Worker.findByIdAndUpdate(workerId, { isRunning: false });
+        res.status(200).json({ status: true, message: `Processing stopped for worker ${workerId}` });
       } else {
-          logger.info(`Worker ${workerId} started for user ${req.user.email}`)
-
-          stoppedWorkers.delete(workerId);
-          const interval = parseInt(worker.interval, 10);
-          startWorkerProcess(workerId, async () => {
-              logger.info(`Processing data for worker ${workerId}`);
-              await processData(worker, req.user._id);
-          }, interval);
-
-          await Worker.findByIdAndUpdate(workerId, { isRunning: true });
-          res.status(200).json({ status: true, message: "Processing started for worker " + workerId });
+        logger.info(`Worker ${workerId} started for user ${req.user.email}`);
+        stoppedWorkers.delete(workerId);
+        const interval = parseInt(worker.interval, 10);
+        startWorkerProcess(workerId, async () => {
+          logger.info(`Processing data for worker ${workerId}`);
+          await processData(worker, req.user._id);
+        }, interval);
+        await Worker.findByIdAndUpdate(workerId, { isRunning: true });
+        res.status(200).json({ status: true, message: `Processing started for worker ${workerId}` });
       }
   } catch (error) {
       logger.error("Error in processing worker:", error);
-      res.status(500).json({ status: false, message: `${error.message}` });
+      res.status(500).json({ status: false, message: error.message });
   }
 });
+
+
 
 async function processData(worker, userId) {
   try {
     // Use mainOperation to simulate fetching data
-    let extractedData = await mainOperation(worker.siteName,worker._id, 1);
+    let extractedData = await mainOperation(worker.siteName, worker._id, 1);
 
     // Process and compare the data as in your original endpoint logic
     const dom = new JSDOM(extractedData);
@@ -93,34 +93,48 @@ async function processData(worker, userId) {
   } catch (error) {
     logger.error("Error during operation for worker " + worker._id + ": ", error);
   }
-} 
+}
+function normalizeUrl(url) {
+  // Remove trailing slash if it exists
+  return url.endsWith('/') ? url.slice(0, -1) : url;
+}
+
 function prepareResult(worker, extractedData) {
   let result = {
     success: true,
     message: "All attributes are equal to the extracted data.",
     extractedData: extractedData
   };
+  // Normalize URLs before comparison
+  const normalizedWorkerDataAmpUrl = normalizeUrl(worker.dataAmpUrl);
+  const normalizedExtractedDataAmpUrl = normalizeUrl(extractedData["data-amp"]);
+  const normalizedWorkerDataAmpCurrent = normalizeUrl(worker.dataAmpCurrent);
+  const normalizedExtractedDataAmpCurrent = normalizeUrl(extractedData["data-amp-cur"]);
+  const normalizedWorkerDataAmpTitle = normalizeUrl(worker.dataAmpTitle);
+  const normalizedExtractedDataAmpTitle = normalizeUrl(extractedData["data-amp-title"]);
+  const normalizedWorkerHref = normalizeUrl(worker.href);
+  const normalizedExtractedHref = normalizeUrl(extractedData.href);
 
   // Check each attribute
-  if (worker.dataAmpUrl !== extractedData["data-amp"]) {
+  if (normalizedWorkerDataAmpUrl !== normalizedExtractedDataAmpUrl) {
     result = {
       success: false,
       message: "'data-amp' is different from the extracted data.",
       extractedData
     };
-  } else if (worker.dataAmpCurrent !== extractedData["data-amp-cur"]) {
+  } else if (normalizedWorkerDataAmpCurrent !== normalizedExtractedDataAmpCurrent) {
     result = {
       success: false,
       message: "'data-amp-cur' is different from the extracted data.",
       extractedData
     };
-  } else if (worker.dataAmpTitle !== extractedData["data-amp-title"]) {
+  } else if (normalizedWorkerDataAmpTitle !== normalizedExtractedDataAmpTitle) {
     result = {
       success: false,
       message: "'data-amp-title' is different from the extracted data.",
       extractedData
     };
-  } else if (worker.href !== extractedData.href) {
+  } else if (normalizedWorkerHref !== normalizedExtractedHref) {
     result = {
       success: false,
       message: "'href' is different from the extracted data.",

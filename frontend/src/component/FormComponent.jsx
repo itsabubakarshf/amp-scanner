@@ -13,6 +13,15 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
     interval: worker ? worker.interval : "",
   };
 
+  const prefilledValues = {
+    siteName: "superbahis.com",
+    dataAmpUrl: "https://3m.superbahis.com/amp.html",
+    dataAmpCurrent: "https://www.superbahis.com/",
+    dataAmpTitle: "3m.superbahis.com",
+    href: "https://www.superbahis.com/",
+    interval: "15",
+  };
+
   const FormSchema = Yup.object().shape({
     siteName: Yup.string().required("Site name is required"),
     dataAmpUrl: Yup.string()
@@ -24,15 +33,15 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
     dataAmpTitle: Yup.string().required("Data AMP Title is required"),
     href: Yup.string().url("Must be a valid URL").required("Href is required"),
     interval: Yup.string()
-    .required("Interval is required")
-    .test(
-      'is-valid-interval', 
-      'Interval must be at least 10 seconds', 
-      value => {
-        const intervalInSeconds = parseInt(value, 10);
-        return !isNaN(intervalInSeconds) && intervalInSeconds >= 10; 
-      }
-    )
+      .required("Interval is required")
+      .test(
+        'is-valid-interval',
+        'Interval must be at least 10 seconds',
+        value => {
+          const intervalInSeconds = parseInt(value, 10);
+          return !isNaN(intervalInSeconds) && intervalInSeconds >= 10;
+        }
+      )
   });
 
   return (
@@ -47,7 +56,7 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
         }}
         enableReinitialize
       >
-        {({ isSubmitting }) => (
+        {({ isSubmitting, setValues, resetForm }) => (
           <Form>
             <div className="form-field">
               <label htmlFor="siteName" className="label">
@@ -135,18 +144,34 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
 
             <button
               type="submit"
-              className="btn btn-primary mr-2  submit-button"
+              className="btn btn-primary mr-2 submit-button"
               disabled={isSubmitting}
             >
               {worker ? "Update" : "Submit"}
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary mr-2 cancel-button"
               onClick={onCancel}
               disabled={isSubmitting}
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-info mr-2 set-button"
+              onClick={() => setValues(prefilledValues)}
+              // disabled={isSubmitting}
+            >
+              Set Values
+            </button>
+            <button
+              type="button"
+              className="btn btn-warning clear-button"
+              onClick={() => resetForm()}
+              // disabled={isSubmitting}
+            >
+              Clear Form
             </button>
           </Form>
         )}

@@ -52,9 +52,11 @@ const startWorkerProcess = (workerId, processFunction, intervalInSeconds) => {
         }
     };
 
-    // Start the initial process
-    const timeoutId = setTimeout(processAndScheduleNext, interval * 1000);
-    activeWorkerIntervals.set(workerId, timeoutId);
+    // Start the initial process only if the worker is not stopped
+    if (!stoppedWorkers.has(workerId)) {
+        const timeoutId = setTimeout(processAndScheduleNext, interval * 1000);
+        activeWorkerIntervals.set(workerId, timeoutId);
+    }
 };
 
 const stopWorkerProcess = (workerId) => {

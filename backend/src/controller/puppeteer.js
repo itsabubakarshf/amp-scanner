@@ -41,7 +41,7 @@ async function extractElementAndCleanup(page, selector, filePath) {
     const element = document.querySelector(sel);
     return element ? element.outerHTML : null;
   }, selector);
-  
+
   if (elementHTML) {
     logger.info(`Element has been extracted`);
     await fs.unlink(filePath);
@@ -51,12 +51,20 @@ async function extractElementAndCleanup(page, selector, filePath) {
     throw new Error("Element not found.");
   }
 }
-async function mainOperation(site="superbahis.com",workerId,attempt = 1) {
+async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
   const dirPath = path.join(__dirname, 'htmlContent');
   await ensureDirectoryExists(dirPath);
 
   const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
-  const browser = await puppeteer.launch({headless:"new"});
+  const browser = await puppeteer.launch(
+    {
+      headless: "new",
+      executablePath: process.platform === 'darwin'
+        ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
+        : process.platform === 'linux'
+          ? '/usr/bin/chromium-browser'
+          : null
+    });
   try {
     const page = await setupPage(browser);
     logger.info("Browser setup complete.");
@@ -78,7 +86,7 @@ async function mainOperation(site="superbahis.com",workerId,attempt = 1) {
       await browser.close();
       logger.info(`Retrying... Attempt ${attempt + 1}`);
       await new Promise((resolve) => setTimeout(resolve, generateDelay(20000, 30000)));
-      await mainOperation(site,workerId,attempt + 1);
+      await mainOperation(site, workerId, attempt + 1);
     } else {
       logger.error("Max retries reached. Exiting...");
     }
