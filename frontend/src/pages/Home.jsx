@@ -11,18 +11,21 @@ const Home = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentWorker, setCurrentWorker] = useState(null);
   const [workers, setWorkers] = useState([]);
+  const [latestResults, setLatestResults] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
 
   useEffect(() => {
     fetchWorkers();
+    fetchLatestResults(); 
+    const intervalId = setInterval(fetchLatestResults, 10000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchWorkers = async () => {
     try {
       const response = await getFromServer("/Workers");
-      console.log(response);
       if (response.status) {
         setWorkers(response.data);
         setError(false);
@@ -36,6 +39,23 @@ const Home = () => {
     }
   };
 
+  const fetchLatestResults = async () => {
+    try {
+      const response = await getFromServer("/get-latest-worker-results");
+      if (response.status) {
+        const results = response.data.reduce((acc, result) => {
+          acc[result.workerId] = result;
+          return acc;
+        }, {});
+        setLatestResults(results);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   const addWorker = async (workerData) => {
     const response = await postToServer("/workers", workerData);
     if (response.status) {
@@ -43,7 +63,6 @@ const Home = () => {
       setShowForm(false);
       toast.success("Worker successfully added!");
     } else {
-      // Handle error
       toast.error("Failed to add worker: " + response.message);
     }
   };
@@ -148,9 +167,10 @@ const Home = () => {
           <div className="row mt-5">
             {filteredWorkers.length > 0 ? (
               filteredWorkers.map((worker) => (
-                <div key={worker._id} className="col-md-3 mb-4">
+                <div key={worker._id} className="col-12 mb-4">
                   <CardComponent
                     worker={worker}
+                    latestResult={latestResults[worker._id]}
                     onEdit={handleEdit}
                     fetchWorkers={fetchWorkers}
                     onClick={() => handleCardClick(worker)}

@@ -1,16 +1,18 @@
+.container {
+  max-width: 100%; /* Ensure container width does not exceed viewport */
+  overflow-x: hidden; /* Prevent horizontal overflow */
+}
 
-  
-  .input-group {
-    width: 100%;
-  }
-  
-  .input-group-text {
-    background-color: #e9ecef;
-    border: none;
-  }
-  
-  .form-control {
-    border: none;
-    box-shadow: none;
-  }
-  
+.input-group {
+  width: 100%;
+}
+
+.input-group-text {
+  background-color: #e9ecef;
+  border: none;
+}
+
+.form-control {
+  border: none;
+  box-shadow: none;
+}
