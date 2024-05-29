@@ -56,15 +56,15 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
   await ensureDirectoryExists(dirPath);
 
   const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
-  const browser = await puppeteer.launch(
-    {
-      headless: "new",
-      executablePath: process.platform === 'darwin'
-        ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
-        : process.platform === 'linux'
-          ? '/usr/bin/chromium-browser'
-          : null
-    });
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    executablePath: process.platform === 'darwin'
+      ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
+      : process.platform === 'linux'
+        ? '/usr/bin/chromium-browser'
+        : null,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   try {
     const page = await setupPage(browser);
     logger.info("Browser setup complete.");
