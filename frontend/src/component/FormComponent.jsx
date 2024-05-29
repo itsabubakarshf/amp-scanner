@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import "./FormComponent.css";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { toast } from "react-toastify";
+import { postToServer } from "../helpers/request";
 
 const FormComponent = ({ worker, onSubmit, onCancel }) => {
+  const [loading, setLoading] = useState(false);
+
   const initialValues = {
     siteName: worker ? worker.siteName : "",
     dataAmpUrl: worker ? worker.dataAmpUrl : "",
@@ -11,15 +15,6 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
     dataAmpTitle: worker ? worker.dataAmpTitle : "",
     href: worker ? worker.href : "",
     interval: worker ? worker.interval : "",
-  };
-
-  const prefilledValues = {
-    siteName: "superbahis.com",
-    dataAmpUrl: "https://3m.superbahis.com/amp.html",
-    dataAmpCurrent: "https://www.superbahis.com/",
-    dataAmpTitle: "3m.superbahis.com",
-    href: "https://www.superbahis.com/",
-    interval: "15",
   };
 
   const FormSchema = Yup.object().shape({
@@ -44,6 +39,28 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
       )
   });
 
+  const loadData = async (siteName, setValues) => {
+    setLoading(true);
+    try {
+      const response = await postToServer("/load-data", { siteName });
+      if (response.status) {
+        setValues({
+          siteName,
+          dataAmpUrl: response.data['data-amp'],
+          dataAmpCurrent: response.data['data-amp-cur'],
+          dataAmpTitle: response.data['data-amp-title'],
+          href: response.data.href,
+        });
+        toast.success("Data loaded successfully!");
+      } else {
+        toast.error("Failed to load data: " + response.message);
+      }
+    } catch (error) {
+      toast.error("Error loading data: " + error.message);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="form-container">
       <Formik
@@ -56,7 +73,7 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
         }}
         enableReinitialize
       >
-        {({ isSubmitting, setValues, resetForm }) => (
+        {({ isSubmitting, setValues, resetForm, values }) => (
           <Form>
             <div className="form-field">
               <label htmlFor="siteName" className="label">
@@ -160,16 +177,16 @@ const FormComponent = ({ worker, onSubmit, onCancel }) => {
             <button
               type="button"
               className="btn btn-info mr-2 set-button"
-              onClick={() => setValues(prefilledValues)}
-              // disabled={isSubmitting}
+              onClick={() => loadData(values.siteName, setValues)}
+              disabled={loading || isSubmitting}
             >
-              Load Data
+              {loading ? 'Loading...' : 'Load Data'}
             </button>
             <button
               type="button"
               className="btn btn-warning clear-button"
               onClick={() => resetForm()}
-              // disabled={isSubmitting}
+              disabled={isSubmitting}
             >
               Clear Form
             </button>
