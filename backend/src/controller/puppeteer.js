@@ -22,7 +22,7 @@ function formatDateToPKT(date) {
 }
 async function setupPage(browser) {
   const page = await browser.newPage();
-  await page.setUserAgent("Mozilla/5.0 (Linux; Android 10; Samsung Galaxy S20 Ultra) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
+  await page.setUserAgent("Mozilla/5.0 (Linux; Android 11; SM-G9910) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.181 Mobile Safari/537.36");
   await page.setViewport({ width: 412, height: 915 });
   return page;
 }
@@ -57,7 +57,7 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
 
   const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: false,
     executablePath: process.platform === 'darwin'
       ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
       : process.platform === 'linux'
@@ -74,7 +74,7 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
 
     await page.waitForNavigation({ waitUntil: "networkidle0" });
     logger.info("Page navigation finished.");
-
+    await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
     await extractAndSaveContent(page, filePath);
     logger.info("Content saved.");
     await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
