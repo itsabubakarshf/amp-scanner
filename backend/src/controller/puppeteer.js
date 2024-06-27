@@ -27,10 +27,12 @@ async function setupPage(browser) {
   return page;
 }
 async function navigateAndSearch(page, url, query) {
+  url=`${url}/search?q=${query}`;
+  console.log("updated URL = ",url)
   await page.goto(url);
-  await page.type(".gLFyf", query);
-  await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
-  await page.keyboard.press("Enter");
+  // await page.type(".gLFyf", query);
+  await new Promise((resolve) => setTimeout(resolve, generateDelay(1500, 2000)));
+  // await page.keyboard.press("Enter");
 }
 async function extractAndSaveContent(page, filePath) {
   const content = await page.content();
@@ -57,7 +59,7 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
 
   const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     executablePath: process.platform === 'darwin'
       ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
       : process.platform === 'linux'
@@ -72,12 +74,11 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
     await navigateAndSearch(page, "https://google.com.tr", site);
     logger.info("Search completed.");
 
-    await page.waitForNavigation({ waitUntil: "networkidle0" });
-    logger.info("Page navigation finished.");
-    await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
+    // await page.waitForNavigation({ waitUntil: "networkidle0" });
+    // logger.info("Page navigation finished.");
     await extractAndSaveContent(page, filePath);
     logger.info("Content saved.");
-    await new Promise((resolve) => setTimeout(resolve, generateDelay(3000, 5000)));
+    await new Promise((resolve) => setTimeout(resolve, generateDelay(1000, 1500)));
     let extractedElement = await extractElementAndCleanup(page, "a[data-amp]", filePath);
     return extractedElement;
   } catch (error) {
@@ -85,7 +86,7 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
     if (attempt < 3) {
       await browser.close();
       logger.info(`Retrying... Attempt ${attempt + 1}`);
-      await new Promise((resolve) => setTimeout(resolve, generateDelay(20000, 30000)));
+      await new Promise((resolve) => setTimeout(resolve, generateDelay(10000, 15000)));
       await mainOperation(site, workerId, attempt + 1);
     } else {
       logger.error("Max retries reached. Exiting...");
