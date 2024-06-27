@@ -59,7 +59,7 @@ async function mainOperation(site = "superbahis.com", workerId, attempt = 1) {
 
   const filePath = path.join(dirPath, `loaded_content_${workerId}.html`);
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     executablePath: process.platform === 'darwin'
       ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
       : process.platform === 'linux'
