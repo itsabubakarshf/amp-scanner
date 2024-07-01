@@ -112,8 +112,7 @@ app.post("/update-process", auth, async (req, res) => {
   if(newState !== 'start' && newState !== 'stop'){
     return res.status(400).send({
       status: false, 
-      message: "Either POST to '/update-process/start' to start all workers or '/update-process/stop' to stop all workers!",
-      newState: newState
+      message: "newState should either be 'start' or 'stop'!",
     })
   }
 
@@ -154,7 +153,7 @@ app.post("/update-process", auth, async (req, res) => {
       }
     } catch (error) {
         logger.error("Error in processing worker:", error);
-        return { status: false, message: error.message, worker };
+        return { status: false, worker };
     }
   });
 
@@ -162,7 +161,10 @@ app.post("/update-process", auth, async (req, res) => {
   .then((values)=>{
     const response = values.map(value=>{
       if (value.status == 'fulfilled'){
-        return value.value;
+        return {
+          ...value.value,
+          status: true
+        };
       } else {
         return value.reason;
       }
