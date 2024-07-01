@@ -70,52 +70,6 @@ app.put('/Workers/:id',auth, async (req, res) => {
     }
 });
 
-// To update the isRunning status of all workers at once!
-app.put('/Workers', auth, async(req, res)=>{
-    let isRunning = req.query.isRunning;
-    if (!isRunning){
-        return res.status(400).send({
-            status: false,
-            message: 'isRunning query param is not set!'
-        })
-    }
-
-    if(isRunning.toLowerCase() != 'true' && isRunning.toLowerCase() != 'false'){
-        return res.status(400).send({
-            status: false,
-            message: `isRunning can either be 'true' or 'false'`,
-        })
-    }
-
-    isRunning = isRunning.toLowerCase() == 'true' ? true : false; 
-
-    try{
-        const workersToBeChanged = await Worker.find({user: req.user._id,isRunning: !isRunning});
-        if (!workersToBeChanged.length){
-            return res.status(400).send({
-                status: false,
-                message: `All workers are already ${isRunning ? 'running' : 'paused'}!`
-            });
-        }
-
-        await Worker.updateMany({isRunning: !isRunning}, {isRunning});
-        const workers = await Worker.find({user: req.user._id});
-        logger.info(`Workers' isRunning state update to ${isRunning ? "'true'" : "'false'"} for user ${req.user.email}`);
-        return res.send({
-            status: true,
-            message: `All workers successfully ${isRunning ? 'started' : 'paused' }!`,
-            data: workers
-        });       
-    } catch(err){
-        logger.error(err.message);
-        return res.status(500).send({
-            status: false,
-            message: 'Failed to update the running state for the workers!'
-        });
-    }
-})
-
-
 app.delete('/Workers/:id',auth, async (req, res) => {
     try {
         const worker = await Worker.findByIdAndDelete(req.params.id);

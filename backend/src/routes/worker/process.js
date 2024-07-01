@@ -106,7 +106,78 @@ app.post("/update-process/:id", auth, async (req, res) => {
   }
 });
 
+//Start or stop all workers
+app.post("/update-process", auth, async (req, res) => {
+  let newState = req.query.newState;
+  if(newState !== 'start' && newState !== 'stop'){
+    return res.status(400).send({
+      status: false, 
+      message: "Either POST to '/update-process/start' to start all workers or '/update-process/stop' to stop all workers!",
+      newState: newState
+    })
+  }
 
+  // Converting newState to boolean 
+  newState = newState == 'start' ? true : false;
+
+  const workersToBeChanged = await Worker.find({user: req.user._id, isRunning: !newState});
+
+  if (!workersToBeChanged.length){
+    return res.status(400).send({
+        status: false,
+        message: `All workers are already ${newState ? 'running' : 'paused'}!`
+    });
+  };
+
+  // Code to start/stop all workers
+
+  const promises = workersToBeChanged.map(async(worker)=>{
+    try {
+      const workerId = worker._id;
+      if (!newState) {
+        // Stop the worker
+        logger.info(`Worker ${workerId} stopped for user ${req.user.email}`);
+        stopWorkerProcess(workerId);
+        await Worker.findByIdAndUpdate(workerId, { isRunning: false });
+        return { status: true, message: `Processing stopped for worker ${workerId}` };
+      } else {
+        // Start the worker
+        logger.info(`Worker ${workerId} started for user ${req.user.email}`);
+        stoppedWorkers.delete(workerId);
+        const interval = parseInt(worker.interval, 10);
+        startWorkerProcess(workerId, async () => {
+          logger.info(`Processing data for worker ${workerId}`);
+          await processData(worker, req.user._id);
+        }, interval);
+        await Worker.findByIdAndUpdate(workerId, { isRunning: true });
+        return ({ status: true, message: `Processing started for worker ${workerId}` });
+      }
+    } catch (error) {
+        logger.error("Error in processing worker:", error);
+        return { status: false, message: error.message, worker };
+    }
+  });
+
+  Promise.allSettled(promises)
+  .then((values)=>{
+    const response = values.map(value=>{
+      if (value.status == 'fulfilled'){
+        return value.value;
+      } else {
+        return value.reason;
+      }
+    });
+    res.send({
+      status: true,
+      data: response
+    });
+  }).catch(()=>{
+    res.status(500).send({
+      status: false,
+      message: 'Something went wrong on the server!'
+    })
+  })
+});
 
 async function processData(worker, userId) {
   try {
